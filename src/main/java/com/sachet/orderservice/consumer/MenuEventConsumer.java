@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 public class MenuEventConsumer implements AcknowledgingMessageListener<String, String> {
     @Override
     @KafkaListener(topics = {"menu-created-event"})
-    public void onMessage(ConsumerRecord<String, String> consumerRecord, Acknowledgment acknowledgment) {
+    public void onMessage(
+            ConsumerRecord<String, String> consumerRecord,
+            Acknowledgment acknowledgment) {
         log.info("ConsumerRecord: {}", consumerRecord);
         assert acknowledgment != null;
         acknowledgment.acknowledge();

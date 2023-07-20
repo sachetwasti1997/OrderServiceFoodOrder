@@ -1,7 +1,15 @@
+
 spring:
+  data:
+    mongodb:
+      uri: mongodb://order-food-mongo-srv:27017/auth?directConnection=true
   kafka:
     consumer:
-      bootstrap-servers: http://kafka-service:9092
       group-id: order-service-listeners
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties[request.timeout.ms]: 600000
+
+    bootstrap-servers: kafka-service:9092
+server:
+  port: 8072

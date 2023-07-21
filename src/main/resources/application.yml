@@ -5,6 +5,7 @@ spring:
       uri: mongodb://order-food-mongo-srv:27017/auth?directConnection=true
   kafka:
     topic1: order-event
+    cancelorder: "cancelorder"
     consumer:
       group-id: order-service-listeners
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

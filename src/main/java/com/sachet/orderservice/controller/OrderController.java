@@ -8,25 +8,27 @@ import com.sachet.orderservice.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/order")
-public class TestController {
+public class OrderController {
     private final OrderService orderService;
     private final MenuRepository menuRepository;
 
-    public TestController(OrderService orderService
+    public OrderController(OrderService orderService
     , MenuRepository menuRepository) {
         this.orderService = orderService;
         this.menuRepository = menuRepository;
     }
     @PostMapping("/create")
-    private ResponseEntity<Order> createOrder(@RequestBody Order order) throws JsonProcessingException {
+    public ResponseEntity<Order> createOrder(@RequestBody Order order) throws JsonProcessingException {
         return ResponseEntity.ok(orderService.createOrder(order));
     }
+    @PutMapping("/cancel")
+    public ResponseEntity<String> cancelOrder(@RequestBody Order order) throws JsonProcessingException{
+        return ResponseEntity.ok(orderService.cancelOrder(order));
+    }
     @GetMapping("/menu")
-    private ResponseEntity<Iterable<Menu>> getAllMenu() {
+    public ResponseEntity<Iterable<Menu>> getAllMenu() {
         return ResponseEntity.ok(menuRepository.findAll());
     }
 }

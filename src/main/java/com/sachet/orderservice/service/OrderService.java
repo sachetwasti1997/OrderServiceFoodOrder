@@ -3,10 +3,9 @@ package com.sachet.orderservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sachet.orderservice.error.MenuNotFoundError;
 import com.sachet.orderservice.error.OrderAlreadyPresent;
-import com.sachet.orderservice.model.Menu;
-import com.sachet.orderservice.model.Order;
-import com.sachet.orderservice.model.OrderCreatedEventModel;
-import com.sachet.orderservice.model.OrderStatus;
+import com.sachet.orderservice.error.OrderNotFound;
+import com.sachet.orderservice.model.*;
+import com.sachet.orderservice.producer.OrderCancelledEventPublisher;
 import com.sachet.orderservice.producer.OrderCreatedEventProducer;
 import com.sachet.orderservice.repository.MenuRepository;
 import com.sachet.orderservice.repository.OrderRepository;
@@ -22,22 +21,26 @@ public class OrderService {
     private final MenuRepository menuRepository;
     private final OrderCreatedEventProducer producer;
 
+    private final OrderCancelledEventPublisher cancelledEventPublisher;
+
     public OrderService(
             OrderRepository orderRepository,
             MenuRepository menuRepository,
-            OrderCreatedEventProducer producer) {
+            OrderCreatedEventProducer producer,
+            OrderCancelledEventPublisher cancelledEventPublisher) {
         this.orderRepository = orderRepository;
         this.menuRepository = menuRepository;
         this.producer = producer;
+        this.cancelledEventPublisher = cancelledEventPublisher;
     }
 
     public Order createOrder(Order order) throws JsonProcessingException {
-        var menuId = order.menuId();
+        var menuId = order.getMenuId();
         var menu = menuRepository.findMenuById(menuId);
 
         // Find if the menu really exists
         if (menu.isEmpty()) {
-            throw new MenuNotFoundError("Menu with the id " + order.menuId() + " not found!"
+            throw new MenuNotFoundError("Menu with the id " + order.getMenuId() + " not found!"
                     , HttpStatus.NOT_FOUND);
         }
 
@@ -58,14 +61,36 @@ public class OrderService {
 
         //publish order created event
         producer.sendOrderCreatedEvent(new OrderCreatedEventModel(
-                savedOrder.id(),
-                savedOrder.status(),
-                savedOrder.userId(),
-                savedOrder.expiresAt().toString(),
-                savedOrder.menuId(),
+                savedOrder.getId(),
+                savedOrder.getStatus(),
+                savedOrder.getUserId(),
+                savedOrder.getExpiresAt().toString(),
+                savedOrder.getMenuId(),
                 savedOrder.getMenuPrice()
         ));
 
         return savedOrder;
+    }
+
+    public String cancelOrder(Order order) throws JsonProcessingException {
+        var orderDB = orderRepository.findOrderByIdAndStatusNot(order.getId(), OrderStatus.CANCELLED.name());
+
+        // Find if the menu really exists
+        if (orderDB.isEmpty()) {
+            throw new OrderNotFound("Order with the id " + order.getId() + " not found!" +
+                    " Or it is already cancelled!"
+                    , HttpStatus.NOT_FOUND);
+        }
+
+        order = orderDB.get();
+        order.setStatus(OrderStatus.CANCELLED.name());
+
+        orderRepository.save(order);
+
+        cancelledEventPublisher.sendOrderCancelEvent(
+                new OrderCancelledEvent(order.getId(), order.getMenuId())
+        );
+
+        return "Cancelled Order "+order.getId();
     }
 }

@@ -48,7 +48,9 @@ public class OrderExpiredConsumer implements AcknowledgingMessageListener<String
             var orderM = orderSavedOp.get();
             orderM.setStatus(OrderStatus.CANCELLED.name());
             orderRepository.save(orderM);
-            publisher.sendOrderCancelEvent(new OrderCancelledEvent(order.getOrderId(), order.getMenuId()));
+            var orderCancelled = new OrderCancelledEvent(order.getOrderId(), order.getMenuId());
+            log.info("Sending Order Cancelled: {}", orderCancelled);
+            publisher.sendOrderCancelEvent(orderCancelled);
             assert acknowledgment != null;
             acknowledgment.acknowledge();
         } catch (JsonProcessingException e) {

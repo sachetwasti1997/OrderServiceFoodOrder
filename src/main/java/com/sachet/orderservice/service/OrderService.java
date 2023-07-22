@@ -52,7 +52,7 @@ public class OrderService {
 
         //set the expiration date and the status
         var expiration = new Date();
-        expiration.setTime(expiration.getTime() + (5 * 1000 * 60));
+        expiration.setTime(expiration.getTime() + (1000 * 60));
         order.setExpiresAt(expiration);
         order.setStatus(OrderStatus.PENDING_PAYMENT.name());
 

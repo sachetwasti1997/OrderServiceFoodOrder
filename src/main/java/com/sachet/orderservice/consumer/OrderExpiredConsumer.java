@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sachet.orderservice.error.OrderNotFound;
 import com.sachet.orderservice.model.OrderCancelledEvent;
 import com.sachet.orderservice.model.OrderStatus;
+import com.sachet.orderservice.producer.OrderCancelledEventPublisher;
 import com.sachet.orderservice.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -20,10 +21,14 @@ public class OrderExpiredConsumer implements AcknowledgingMessageListener<String
 
     private final OrderRepository orderRepository;
     private final ObjectMapper objectMapper;
+    private final OrderCancelledEventPublisher publisher;
 
-    public OrderExpiredConsumer(OrderRepository orderRepository, ObjectMapper objectMapper) {
+    public OrderExpiredConsumer(OrderRepository orderRepository,
+                                ObjectMapper objectMapper,
+                                OrderCancelledEventPublisher publisher) {
         this.orderRepository = orderRepository;
         this.objectMapper = objectMapper;
+        this.publisher = publisher;
     }
 
     @Override
@@ -43,6 +48,7 @@ public class OrderExpiredConsumer implements AcknowledgingMessageListener<String
             var orderM = orderSavedOp.get();
             orderM.setStatus(OrderStatus.CANCELLED.name());
             orderRepository.save(orderM);
+            publisher.sendOrderCancelEvent(new OrderCancelledEvent(order.getOrderId(), order.getMenuId()));
             assert acknowledgment != null;
             acknowledgment.acknowledge();
         } catch (JsonProcessingException e) {

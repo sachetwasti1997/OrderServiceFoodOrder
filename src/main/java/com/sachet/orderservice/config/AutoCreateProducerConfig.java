@@ -11,10 +11,22 @@ public class AutoCreateProducerConfig {
     @Value("${spring.kafka.topic1}")
     private String topic;
 
+    @Value("${spring.kafka.cancelorder}")
+    private String cancelordertopic;
+
     @Bean
     public NewTopic orderCreatedEvent() {
         return TopicBuilder
                 .name(topic)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic orderCancelledTopic() {
+        return TopicBuilder
+                .name(cancelordertopic)
                 .partitions(1)
                 .replicas(1)
                 .build();

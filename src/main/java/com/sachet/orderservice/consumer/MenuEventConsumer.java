@@ -24,7 +24,11 @@ public class MenuEventConsumer implements AcknowledgingMessageListener<String, S
     }
 
     @Override
-    @KafkaListener(topics = {"menu-created-event"})
+    @KafkaListener(
+            topics = {"menu-created-event"},
+            groupId = "${spring.kafka.consumer.group-id}",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
     public void onMessage(
             ConsumerRecord<String, String> consumerRecord,
             Acknowledgment acknowledgment) {

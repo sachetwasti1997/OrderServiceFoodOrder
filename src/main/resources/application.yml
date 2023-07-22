@@ -6,11 +6,11 @@ spring:
   kafka:
     topic1: order-event
     cancelorder: "cancelorder"
+    expireorder: "expireorder"
     consumer:
       group-id: order-service-listeners
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties[request.timeout.ms]: 600000
+    orderexpireconsumer:
+      group-id: order-expiration-order-listeners
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
